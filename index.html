@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stand-to-Cherax Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .panel-content {
+            padding: 20px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: none;
+            line-height: 1.5;
+        }
+
+        .input-area {
+            margin-bottom: 15px;
+        }
+
+        .output-area {
+            margin-bottom: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bottom-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .ast-viewer {
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tree {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        .tree-node {
+            margin-left: 20px;
+        }
+
+        .tree-toggle {
+            cursor: pointer;
+            user-select: none;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tree-toggle:hover {
+            color: #764ba2;
+        }
+
+        .tree-collapsed {
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-message {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #bee5eb;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .example-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .example-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .line-numbers {
+            display: inline-block;
+            color: #999;
+            user-select: none;
+            padding-right: 15px;
+            text-align: right;
+            min-width: 30px;
+            border-right: 1px solid #eee;
+            margin-right: 15px;
+        }
+
+        .comparison-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-view {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Stand-to-Cherax Converter</h1>
+            <p class="subtitle">Transform Stand library syntax to Cherax with AST-based parsing</p>
+        </header>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-header">📝 Input (Stand Lua Code)</div>
+                <div class="panel-content">
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="loadExample('basic')">Basic Example</button>
+                        <button class="btn-secondary" onclick="loadExample('advanced')">Advanced Example</button>
+                        <button class="btn-secondary" onclick="clearInput()">Clear</button>
+                    </div>
+                    <textarea id="inputCode" placeholder="Paste your Stand Lua code here...">-- Stand library example
+local Stand = require('stand')
+
+function myScript()
+    local result = Stand.getResult()
+    if result then
+        Stand.notify('Result: ' .. result)
+    end
+end</textarea>
+                    <div class="status" id="inputStatus"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">✨ Output (Cherax Code)</div>
+                <div class="panel-content">
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="convertCode()">🚀 Convert</button>
+                        <button class="btn-secondary" onclick="copyOutput()">📋 Copy</button>
+                        <button class="btn-secondary" onclick="downloadOutput()">⬇️ Download</button>
+                    </div>
+                    <textarea id="outputCode" placeholder="Converted Cherax code will appear here..." readonly></textarea>
+                    <div class="status" id="outputStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-panel">
+            <div class="ast-viewer">
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('ast')">🌳 AST Viewer</button>
+                    <button class="tab-button" onclick="switchTab('tokens')">🔤 Tokens</button>
+                    <button class="tab-button" onclick="switchTab('analysis')">📊 Analysis</button>
+                    <button class="tab-button" onclick="switchTab('help')">❓ Help</button>
+                </div>
+
+                <div id="ast" class="tab-content active">
+                    <div id="astOutput" class="tree"></div>
+                </div>
+
+                <div id="tokens" class="tab-content">
+                    <div id="tokensOutput" class="tree"></div>
+                </div>
+
+                <div id="analysis" class="tab-content">
+                    <div id="analysisOutput" class="tree"></div>
+                </div>
+
+                <div id="help" class="tab-content">
+                    <div style="padding: 10px; line-height: 1.6;">
+                        <h3>How to Use</h3>
+                        <p><strong>1. Paste Code:</strong> Enter your Stand Lua code in the input panel</p>
+                        <p><strong>2. Convert:</strong> Click the "Convert" button to transform it to Cherax syntax</p>
+                        <p><strong>3. Review:</strong> Check the AST Viewer to understand the code structure</p>
+                        <p><strong>4. Export:</strong> Copy or download the converted code</p>
+                        
+                        <h3 style="margin-top: 20px;">Supported Conversions</h3>
+                        <ul style="margin-left: 20px;">
+                            <li>Stand.getResult() → Cherax.getResult()</li>
+                            <li>Stand.notify() → Cherax.notify()</li>
+                            <li>local x = y → var x = y</li>
+                            <li>function name() → function name()</li>
+                            <li>if x then → if (x)</li>
+                            <li>end → } / )</li>
+                        </ul>
+
+                        <h3 style="margin-top: 20px;">AST Features</h3>
+                        <p>The converter parses your code into an Abstract Syntax Tree (AST) which allows:</p>
+                        <ul style="margin-left: 20px;">
+                            <li>Accurate syntax transformation</li>
+                            <li>Type inference and analysis</li>
+                            <li>Variable scope tracking</li>
+                            <li>Function call optimization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // LEXER - Tokenization
+        // ============================================
+        class Lexer {
+            constructor(source) {
+                this.source = source;
+                this.position = 0;
+                this.line = 1;
+                this.column = 1;
+                this.tokens = [];
+            }
+
+            error(message) {
+                throw new Error(`Lexer Error at line ${this.line}, column ${this.column}: ${message}`);
+            }
+
+            peek(offset = 0) {
+                return this.source[this.position + offset] || '\0';
+            }
+
+            advance() {
+                const char = this.source[this.position];
+                this.position++;
+                if (char === '\n') {
+                    this.line++;
+                    this.column = 1;
+                } else {
+                    this.column++;
+                }
+                return char;
+            }
+
+            skipWhitespace() {
+                while (/\s/.test(this.peek())) {
+                    this.advance();
+                }
+            }
+
+            skipComment() {
+                if (this.peek() === '-' && this.peek(1) === '-') {
+                    this.advance();
+                    this.advance();
+                    while (this.peek() !== '\n' && this.peek() !== '\0') {
+                        this.advance();
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            readString() {
+                const quote = this.peek();
+                this.advance();
+                let value = '';
+                while (this.peek() !== quote && this.peek() !== '\0') {
+                    if (this.peek() === '\\') {
+                        this.advance();
+                        const char = this.peek();
+                        switch (char) {
+                            case 'n': value += '\n'; break;
+                            case 't': value += '\t'; break;
+                            case 'r': value += '\r'; break;
+                            case '\\': value += '\\'; break;
+                            case '"': value += '"'; break;
+                            case "'": value += "'"; break;
+                            default: value += char;
+                        }
+                        this.advance();
+                    } else {
+                        value += this.advance();
+                    }
+                }
+                if (this.peek() === quote) {
+                    this.advance();
+                }
+                return value;
+            }
+
+            readNumber() {
+                let value = '';
+                while (/[0-9.]/.test(this.peek())) {
+                    value += this.advance();
+                }
+                return parseFloat(value);
+            }
+
+            readIdentifier() {
+                let value = '';
+                while (/[a-zA-Z0-9_]/.test(this.peek())) {
+                    value += this.advance();
+                }
+                return value;
+            }
+
+            addToken(type, value = null, literal = null) {
+                this.tokens.push({
+                    type,
+                    value,
+                    literal,
+                    line: this.line,
+                    column: this.column
+                });
+            }
+
+            tokenize() {
+                const keywords = {
+                    'local': 'LOCAL',
+                    'function': 'FUNCTION',
+                    'if': 'IF',
+                    'then': 'THEN',
+                    'else': 'ELSE',
+                    'elseif': 'ELSEIF',
+                    'end': 'END',
+                    'for': 'FOR',
+                    'in': 'IN',
+                    'do': 'DO',
+                    'while': 'WHILE',
+                    'repeat': 'REPEAT',
+                    'until': 'UNTIL',
+                    'return': 'RETURN',
+                    'nil': 'NIL',
+                    'true': 'TRUE',
+                    'false': 'FALSE',
+                    'and': 'AND',
+                    'or': 'OR',
+                    'not': 'NOT',
+                    'require': 'REQUIRE'
+                };
+
+                while (this.position < this.source.length) {
+                    this.skipWhitespace();
+                    if (this.skipComment()) continue;
+
+                    const char = this.peek();
+
+                    if (char === '"' || char === "'") {
+                        const value = this.readString();
+                        this.addToken('STRING', value, value);
+                    } else if (/[0-9]/.test(char)) {
+                        const value = this.readNumber();
+                        this.addToken('NUMBER', value, value);
+                    } else if (/[a-zA-Z_]/.test(char)) {
+                        const value = this.readIdentifier();
+                        const type = keywords[value] || 'IDENTIFIER';
+                        this.addToken(type, value, value);
+                    } else if (char === '=' && this.peek(1) === '=') {
+                        this.advance();
+                        this.advance();
+                        this.addToken('EQ');
+                    } else if (char === '~' && this.peek(1) === '=') {
+                        this.advance();
+                        this.advance();
+                        this.addToken('NEQ');
+                    } else if (char === '<' && this.peek(1) === '=') {
+                        this.advance();
+                        this.advance();
+                        this.addToken('LE');
+                    } else if (char === '>' && this.peek(1) === '=') {
+                        this.advance();
+                        this.advance();
+                        this.addToken('GE');
+                    } else if (char === '.' && this.peek(1) === '.') {
+                        this.advance();
+                        this.advance();
+                        this.addToken('CONCAT');
+                    } else {
+                        this.advance();
+                        const tokenMap = {
+                            '(': 'LPAREN',
+                            ')': 'RPAREN',
+                            '{': 'LBRACE',
+                            '}': 'RBRACE',
+                            '[': 'LBRACKET',
+                            ']': 'RBRACKET',
+                            '=': 'ASSIGN',
+                            '+': 'PLUS',
+                            '-': 'MINUS',
+                            '*': 'STAR',
+                            '/': 'SLASH',
+                            '%': 'PERCENT',
+                            '^': 'CARET',
+                            '#': 'HASH',
+                            ':': 'COLON',
+                            ';': 'SEMICOLON',
+                            ',': 'COMMA',
+                            '.': 'DOT',
+                            '<': 'LT',
+                            '>': 'GT'
+                        };
+                        if (tokenMap[char]) {
+                            this.addToken(tokenMap[char]);
+                        }
+                    }
+                }
+
+                this.addToken('EOF');
+                return this.tokens;
+            }
+        }
+
+        // ============================================
+        // AST NODE CLASSES
+        // ============================================
+        class ASTNode {
+            constructor(type) {
+                this.type = type;
+            }
+        }
+
+        class Program extends ASTNode {
+            constructor() {
+                super('Program');
+                this.statements = [];
+            }
+        }
+
+        class LocalStatement extends ASTNode {
+            constructor(name, init) {
+                super('LocalStatement');
+                this.name = name;
+                this.init = init;
+            }
+        }
+
+        class FunctionDeclaration extends ASTNode {
+            constructor(name, params, body) {
+                super('FunctionDeclaration');
+                this.name = name;
+                this.params = params;
+                this.body = body;
+            }
+        }
+
+        class IfStatement extends ASTNode {
+            constructor(condition, thenBranch, elseBranch = null) {
+                super('IfStatement');
+                this.condition = condition;
+                this.thenBranch = thenBranch;
+                this.elseBranch = elseBranch;
+            }
+        }
+
+        class CallExpression extends ASTNode {
+            constructor(callee, args) {
+                super('CallExpression');
+                this.callee = callee;
+                this.args = args;
+            }
+        }
+
+        class MemberExpression extends ASTNode {
+            constructor(object, property, computed = false) {
+                super('MemberExpression');
+                this.object = object;
+                this.property = property;
+                this.computed = computed;
+            }
+        }
+
+        class Identifier extends ASTNode {
+            constructor(name) {
+                super('Identifier');
+                this.name = name;
+            }
+        }
+
+        class Literal extends ASTNode {
+            constructor(value, raw) {
+                super('Literal');
+                this.value = value;
+                this.raw = raw;
+            }
+        }
+
+        class BinaryExpression extends ASTNode {
+            constructor(left, operator, right) {
+                super('BinaryExpression');
+                this.left = left;
+                this.operator = operator;
+                this.right = right;
+            }
+        }
+
+        class AssignmentExpression extends ASTNode {
+            constructor(left, right) {
+                super('AssignmentExpression');
+                this.left = left;
+                this.right = right;
+            }
+        }
+
+        class ReturnStatement extends ASTNode {
+            constructor(argument = null) {
+                super('ReturnStatement');
+                this.argument = argument;
+            }
+        }
+
+        class BlockStatement extends ASTNode {
+            constructor(body) {
+                super('BlockStatement');
+                this.body = body || [];
+            }
+        }
+
+        // ============================================
+        // PARSER - AST Generation
+        // ============================================
+        class Parser {
+            constructor(tokens) {
+                this.tokens = tokens;
+                this.position = 0;
+                this.current = tokens[0];
+            }
+
+            error(message) {
+                throw new Error(`Parse Error at token ${this.position}: ${message}`);
+            }
+
+            peek(offset = 0) {
+                return this.tokens[this.position + offset] || { type: 'EOF' };
+            }
+
+            advance() {
+                this.position++;
+                this.current = this.peek();
+                return this.tokens[this.position - 1];
+            }
+
+            expect(type) {
+                if (this.current.type !== type) {
+                    this.error(`Expected ${type}, got ${this.current.type}`);
+                }
+                return this.advance();
+            }
+
+            match(...types) {
+                if (types.includes(this.current.type)) {
+                    return this.advance();
+                }
+                return null;
+            }
+
+            parse() {
+                const program = new Program();
+                while (this.current.type !== 'EOF') {
+                    const stmt = this.parseStatement();
+                    if (stmt) program.statements.push(stmt);
+                }
+                return program;
+            }
+
+            parseStatement() {
+                if (this.match('LOCAL')) return this.parseLocalStatement();
+                if (this.match('FUNCTION')) return this.parseFunctionDeclaration();
+                if (this.match('IF')) return this.parseIfStatement();
+                if (this.match('RETURN')) return this.parseReturnStatement();
+                return this.parseExpressionStatement();
+            }
+
+            parseLocalStatement() {
+                const name = this.expect('IDENTIFIER').value;
+                let init = null;
+                if (this.match('ASSIGN')) {
+                    init = this.parseExpression();
+                }
+                return new LocalStatement(name, init);
+            }
+
+            parseFunctionDeclaration() {
+                const name = this.expect('IDENTIFIER').value;
+                this.expect('LPAREN');
+                const params = [];
+                if (this.current.type !== 'RPAREN') {
+                    params.push(this.expect('IDENTIFIER').value);
+                    while (this.match('COMMA')) {
+                        params.push(this.expect('IDENTIFIER').value);
+                    }
+                }
+                this.expect('RPAREN');
+                const body = this.parseBlock();
+                this.expect('END');
+                return new FunctionDeclaration(name, params, body);
+            }
+
+            parseIfStatement() {
+                const condition = this.parseExpression();
+                this.expect('THEN');
+                const thenBranch = this.parseBlock();
+                let elseBranch = null;
+                if (this.match('ELSE')) {
+                    elseBranch = this.parseBlock();
+                    this.expect('END');
+                } else if (this.match('ELSEIF')) {
+                    elseBranch = new BlockStatement([this.parseIfStatement()]);
+                } else {
+                    this.expect('END');
+                }
+                return new IfStatement(condition, thenBranch, elseBranch);
+            }
+
+            parseReturnStatement() {
+                let argument = null;
+                if (this.current.type !== 'END' && this.current.type !== 'EOF') {
+                    argument = this.parseExpression();
+                }
+                return new ReturnStatement(argument);
+            }
+
+            parseBlock() {
+                const statements = [];
+                while (this.current.type !== 'END' && this.current.type !== 'ELSE' && 
+                       this.current.type !== 'ELSEIF' && this.current.type !== 'EOF') {
+                    const stmt = this.parseStatement();
+                    if (stmt) statements.push(stmt);
+                }
+                return new BlockStatement(statements);
+            }
+
+            parseExpressionStatement() {
+                return this.parseExpression();
+            }
+
+            parseExpression() {
+                return this.parseAssignment();
+            }
+
+            parseAssignment() {
+                let expr = this.parseLogicalOr();
+                if (this.match('ASSIGN')) {
+                    const right = this.parseAssignment();
+                    return new AssignmentExpression(expr, right);
+                }
+                return expr;
+            }
+
+            parseLogicalOr() {
+                let expr = this.parseLogicalAnd();
+                while (this.match('OR')) {
+                    const operator = this.tokens[this.position - 1].value;
+                    const right = this.parseLogicalAnd();
+                    expr = new BinaryExpression(expr, operator, right);
+                }
+                return expr;
+            }
+
+            parseLogicalAnd() {
+                let expr = this.parseEquality();
+                while (this.match('AND')) {
+                    const operator = this.tokens[this.position - 1].value;
+                    const right = this.parseEquality();
+                    expr = new BinaryExpression(expr, operator, right);
+                }
+                return expr;
+            }
+
+            parseEquality() {
+                let expr = this.parseComparison();
+                while (this.match('EQ', 'NEQ')) {
+                    const operator = this.tokens[this.position - 1].value || this.tokens[this.position - 1].type;
+                    const right = this.parseComparison();
+                    expr = new BinaryExpression(expr, operator, right);
+                }
+                return expr;
+            }
+
+            parseComparison() {
+                let expr = this.parseAdditive();
+                while (this.match('LT', 'GT', 'LE', 'GE')) {
+                    const operator = this.tokens[this.position - 1].value;
+                    const right = this.parseAdditive();
+                    expr = new BinaryExpression(expr, operator, right);
+                }
+                return expr;
+            }
+
+            parseAdditive() {
+                let expr = this.parseMultiplicative();
+                while (this.match('PLUS', 'MINUS')) {
+                    const operator = this.tokens[this.position - 1].value;
+                    const right = this.parseMultiplicative();
+                    expr = new BinaryExpression(expr, operator, right);
+                }
+                return expr;
+            }
+
+            parseMultiplicative() {
+                let expr = this.parseUnary();
+                while (this.match('STAR', 'SLASH', 'PERCENT')) {
+                    const operator = this.tokens[this.position - 1].value;
+                    const right = this.parseUnary();
+                    expr = new BinaryExpression(expr, operator, right);
+                }
+                return expr;
+            }
+
+            parseUnary() {
+                if (this.match('NOT', 'MINUS')) {
+                    const operator = this.tokens[this.position - 1].value;
+                    const expr = this.parseUnary();
+                    return new BinaryExpression(new Literal(null, 'unary'), operator, expr);
+                }
+                return this.parsePostfix();
+            }
+
+            parsePostfix() {
+                let expr = this.parsePrimary();
+                while (true) {
+                    if (this.match('LPAREN')) {
+                        const args = [];
+                        if (this.current.type !== 'RPAREN') {
+                            args.push(this.parseExpression());
+                            while (this.match('COMMA')) {
+                                args.push(this.parseExpression());
+                            }
+                        }
+                        this.expect('RPAREN');
+                        expr = new CallExpression(expr, args);
+                    } else if (this.match('DOT')) {
+                        const property = this.expect('IDENTIFIER').value;
+                        expr = new MemberExpression(expr, new Identifier(property), false);
+                    } else if (this.match('LBRACKET')) {
+                        const property = this.parseExpression();
+                        this.expect('RBRACKET');
+                        expr = new MemberExpression(expr, property, true);
+                    } else {
+                        break;
+                    }
+                }
+                return expr;
+            }
+
+            parsePrimary() {
+                if (this.match('TRUE')) return new Literal(true, 'true');
+                if (this.match('FALSE')) return new Literal(false, 'false');
+                if (this.match('NIL')) return new Literal(null, 'nil');
+                if (this.match('NUMBER')) {
+                    return new Literal(this.tokens[this.position - 1].literal, this.tokens[this.position - 1].literal.toString());
+                }
+                if (this.match('STRING')) {
+                    return new Literal(this.tokens[this.position - 1].literal, `"${this.tokens[this.position - 1].literal}"`);
+                }
+                if (this.match('IDENTIFIER')) {
+                    return new Identifier(this.tokens[this.position - 1].value);
+                }
+                if (this.match('LPAREN')) {
+                    const expr = this.parseExpression();
+                    this.expect('RPAREN');
+                    return expr;
+                }
+                this.error(`Unexpected token: ${this.current.type}`);
+            }
+        }
+
+        // ============================================
+        // AST TO CHERAX CODE GENERATOR
+        // ============================================
+        class CheraxGenerator {
+            constructor(ast) {
+                this.ast = ast;
+                this.code = '';
+                this.indentLevel = 0;
+            }
+
+            indent() {
+                return '    '.repeat(this.indentLevel);
+            }
+
+            generate() {
+                this.code = '';
+                this.indentLevel = 0;
+                for (const stmt of this.ast.statements) {
+                    this.generateStatement(stmt);
+                }
+                return this.code;
+            }
+
+            generateStatement(node) {
+                if (!node) return;
+
+                if (node.type === 'LocalStatement') {
+                    this.code += this.indent() + `var ${node.name}`;
+                    if (node.init) {
+                        this.code += ' = ';
+                        this.generateExpression(node.init);
+                    }
+                    this.code += ';\n';
+                } else if (node.type === 'FunctionDeclaration') {
+                    this.code += this.indent() + `function ${node.name}(${node.params.join(', ')}) {\n`;
+                    this.indentLevel++;
+                    for (const stmt of node.body.body) {
+                        this.generateStatement(stmt);
+                    }
+                    this.indentLevel--;
+                    this.code += this.indent() + '}\n';
+                } else if (node.type === 'IfStatement') {
+                    this.code += this.indent() + 'if (';
+                    this.generateExpression(node.condition);
+                    this.code += ') {\n';
+                    this.indentLevel++;
+                    for (const stmt of node.thenBranch.body) {
+                        this.generateStatement(stmt);
+                    }
+                    this.indentLevel--;
+                    if (node.elseBranch) {
+                        this.code += this.indent() + '} else {\n';
+                        this.indentLevel++;
+                        for (const stmt of node.elseBranch.body) {
+                            this.generateStatement(stmt);
+                        }
+                        this.indentLevel--;
+                    }
+                    this.code += this.indent() + '}\n';
+                } else if (node.type === 'ReturnStatement') {
+                    this.code += this.indent() + 'return';
+                    if (node.argument) {
+                        this.code += ' ';
+                        this.generateExpression(node.argument);
+                    }
+                    this.code += ';\n';
+                } else if (node.type === 'BlockStatement') {
+                    for (const stmt of node.body) {
+                        this.generateStatement(stmt);
+                    }
+                } else if (node.type === 'CallExpression' || node.type === 'AssignmentExpression' || 
+                           node.type === 'BinaryExpression') {
+                    this.code += this.indent();
+                    this.generateExpression(node);
+                    this.code += ';\n';
+                }
+            }
+
+            generateExpression(node) {
+                if (!node) return;
+
+                if (node.type === 'CallExpression') {
+                    this.generateExpression(node.callee);
+                    this.code += '(';
+                    for (let i = 0; i < node.args.length; i++) {
+                        if (i > 0) this.code += ', ';
+                        this.generateExpression(node.args[i]);
+                    }
+                    this.code += ')';
+                } else if (node.type === 'MemberExpression') {
+                    this.generateExpression(node.object);
+                    if (node.computed) {
+                        this.code += '[';
+                        this.generateExpression(node.property);
+                        this.code += ']';
+                    } else {
+                        this.code += '.';
+                        this.generateExpression(node.property);
+                    }
+                } else if (node.type === 'Identifier') {
+                    // Transform Stand library calls
+                    if (node.name === 'Stand') {
+                        this.code += 'Cherax';
+                    } else {
+                        this.code += node.name;
+                    }
+                } else if (node.type === 'Literal') {
+                    if (typeof node.value === 'string') {
+                        this.code += `"${node.value}"`;
+                    } else if (node.value === null) {
+                        this.code += 'null';
+                    } else {
+                        this.code += node.raw;
+                    }
+                } else if (node.type === 'BinaryExpression') {
+                    if (node.operator === 'unary') {
+                        this.code += node.right.operator + ' ';
+                        this.generateExpression(node.right.right || node.right);
+                    } else {
+                        this.generateExpression(node.left);
+                        this.code += ' ' + this.transformOperator(node.operator) + ' ';
+                        this.generateExpression(node.right);
+                    }
+                } else if (node.type === 'AssignmentExpression') {
+                    this.generateExpression(node.left);
+                    this.code += ' = ';
+                    this.generateExpression(node.right);
+                }
+            }
+
+            transformOperator(op) {
+                const map = {
+                    '==': '==',
+                    '~=': '!=',
+                    '<': '<',
+                    '>': '>',
+                    '<=': '<=',
+                    '>=': '>=',
+                    'and': '&&',
+                    'or': '||',
+                    'not': '!',
+                    '.': '+'
+                };
+                return map[op] || op;
+            }
+        }
+
+        // ============================================
+        // ANALYSIS ENGINE
+        // ============================================
+        class Analyzer {
+            constructor(ast, tokens) {
+                this.ast = ast;
+                this.tokens = tokens;
+                this.variables = new Set();
+                this.functions = new Set();
+                this.calls = [];
+                this.analysis = {};
+            }
+
+            analyze() {
+                this.analyzeStatements(this.ast.statements);
+                this.analysis = {
+                    totalLines: this.tokens.filter(t => t.type !== 'EOF').length,
+                    variables: Array.from(this.variables),
+                    functions: Array.from(this.functions),
+                    functionCalls: this.calls,
+                    complexity: this.calculateComplexity()
+                };
+                return this.analysis;
+            }
+
+            analyzeStatements(statements) {
+                for (const stmt of statements) {
+                    if (stmt.type === 'LocalStatement') {
+                        this.variables.add(stmt.name);
+                    } else if (stmt.type === 'FunctionDeclaration') {
+                        this.functions.add(stmt.name);
+                    } else if (stmt.type === 'IfStatement') {
+                        this.analyzeStatements(stmt.thenBranch.body);
+                        if (stmt.elseBranch) {
+                            this.analyzeStatements(stmt.elseBranch.body);
+                        }
+                    } else if (stmt.type === 'BlockStatement') {
+                        this.analyzeStatements(stmt.body);
+                    }
+                    this.analyzeCallsInStatement(stmt);
+                }
+            }
+
+            analyzeCallsInStatement(stmt) {
+                if (!stmt) return;
+                if (stmt.type === 'CallExpression') {
+                    if (stmt.callee.type === 'MemberExpression') {
+                        if (stmt.callee.object.name === 'Stand') {
+                            this.calls.push(`Stand.${stmt.callee.property.name}()`);
+                        }
+                    }
+                } else if (stmt.type === 'IfStatement') {
+                    this.analyzeExpression(stmt.condition);
+                    this.analyzeStatements(stmt.thenBranch.body);
+                    if (stmt.elseBranch) {
+                        this.analyzeStatements(stmt.elseBranch.body);
+                    }
+                } else if (stmt.type === 'BlockStatement') {
+                    this.analyzeStatements(stmt.body);
+                }
+            }
+
+            analyzeExpression(expr) {
+                if (!expr) return;
+                if (expr.type === 'CallExpression') {
+                    this.analyzeCallsInStatement(expr);
+                } else if (expr.type === 'BinaryExpression') {
+                    this.analyzeExpression(expr.left);
+                    this.analyzeExpression(expr.right);
+                } else if (expr.type === 'MemberExpression') {
+                    this.analyzeExpression(expr.object);
+                }
+            }
+
+            calculateComplexity() {
+                let complexity = 1;
+                const countComplexity = (stmt) => {
+                    if (!stmt) return;
+                    if (stmt.type === 'IfStatement') complexity += 1;
+                    if (stmt.type === 'FunctionDeclaration') complexity += 2;
+                    if (stmt.body) stmt.body.forEach(countComplexity);
+                    if (stmt.thenBranch) stmt.thenBranch.body.forEach(countComplexity);
+                    if (stmt.elseBranch) stmt.elseBranch.body.forEach(countComplexity);
+                };
+                this.ast.statements.forEach(countComplexity);
+                return complexity;
+            }
+        }
+
+        // ============================================
+        // AST VISUALIZER
+        // ============================================
+        function renderAST(node, depth = 0) {
+            if (!node) return '';
+            const indent = '  '.repeat(depth);
+            let html = '';
+
+            if (node.type === 'Program') {
+                html += `<div class="tree-node"><strong>Program</strong><div>`;
+                for (const stmt of node.statements) {
+                    html += renderAST(stmt, depth + 1);
+                }
+                html += '</div></div>';
+            } else if (node.type === 'LocalStatement') {
+                html += `<div class="tree-node"><span class="tree-toggle">▼</span> <strong>LocalStatement</strong>: ${node.name}`;
+                if (node.init) {
+                    html += `<div class="tree-collapsed">`;
+                    html += renderAST(node.init, depth + 1);
+                    html += `</div>`;
+                }
+                html += '</div>';
+            } else if (node.type === 'FunctionDeclaration') {
+                html += `<div class="tree-node"><span class="tree-toggle">▼</span> <strong>FunctionDeclaration</strong>: ${node.name}(${node.params.join(', ')})`;
+                html += `<div class="tree-collapsed">`;
+                for (const stmt of node.body.body) {
+                    html += renderAST(stmt, depth + 1);
+                }
+                html += `</div></div>`;
+            } else if (node.type === 'IfStatement') {
+                html += `<div class="tree-node"><span class="tree-toggle">▼</span> <strong>IfStatement</strong>`;
+                html += `<div class="tree-collapsed">`;
+                html += `<div class="tree-node">Condition:</div>`;
+                html += renderAST(node.condition, depth + 1);
+                html += `<div class="tree-node">ThenBranch:</div>`;
+                for (const stmt of node.thenBranch.body) {
+                    html += renderAST(stmt, depth + 1);
+                }
+                if (node.elseBranch) {
+                    html += `<div class="tree-node">ElseBranch:</div>`;
+                    for (const stmt of node.elseBranch.body) {
+                        html += renderAST(stmt, depth + 1);
+                    }
+                }
+                html += `</div></div>`;
+            } else if (node.type === 'CallExpression') {
+                html += `<div class="tree-node"><strong>CallExpression</strong>`;
+                html += `<div class="tree-collapsed">`;
+                html += renderAST(node.callee, depth + 1);
+                for (const arg of node.args) {
+                    html += renderAST(arg, depth + 1);
+                }
+                html += `</div></div>`;
+            } else if (node.type === 'MemberExpression') {
+                html += `<div class="tree-node"><strong>MemberExpression</strong>`;
+                html += `<div class="tree-collapsed">`;
+                html += renderAST(node.object, depth + 1);
+                html += renderAST(node.property, depth + 1);
+                html += `</div></div>`;
+            } else if (node.type === 'Identifier') {
+                html += `<div class="tree-node"><strong>Identifier</strong>: ${node.name}</div>`;
+            } else if (node.type === 'Literal') {
+                html += `<div class="tree-node"><strong>Literal</strong>: ${node.raw}</div>`;
+            } else if (node.type === 'BinaryExpression') {
+                html += `<div class="tree-node"><strong>BinaryExpression</strong> (${node.operator})`;
+                html += `<div class="tree-collapsed">`;
+                html += renderAST(node.left, depth + 1);
+                html += renderAST(node.right, depth + 1);
+                html += `</div></div>`;
+            } else if (node.type === 'AssignmentExpression') {
+                html += `<div class="tree-node"><strong>AssignmentExpression</strong>`;
+                html += `<div class="tree-collapsed">`;
+                html += renderAST(node.left, depth + 1);
+                html += renderAST(node.right, depth + 1);
+                html += `</div></div>`;
+            } else if (node.type === 'BlockStatement') {
+                for (const stmt of node.body) {
+                    html += renderAST(stmt, depth);
+                }
+            }
+
+            return html;
+        }
+
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        function convertCode() {
+            const input = document.getElementById('inputCode').value;
+            const astOutput = document.getElementById('astOutput');
+            const tokensOutput = document.getElementById('tokensOutput');
+            const analysisOutput = document.getElementById('analysisOutput');
+            const outputCode = document.getElementById('outputCode');
+            const inputStatus = document.getElementById('inputStatus');
+            const outputStatus = document.getElementById('outputStatus');
+
+            try {
+                inputStatus.innerHTML = '';
+                
+                // Lexical analysis
+                const lexer = new Lexer(input);
+                const tokens = lexer.tokenize();
+
+                // Parse
+                const parser = new Parser(tokens);
+                const ast = parser.parse();
+
+                // Generate Cherax code
+                const generator = new CheraxGenerator(ast);
+                const cheraxCode = generator.generate();
+
+                // Analyze
+                const analyzer = new Analyzer(ast, tokens);
+                const analysis = analyzer.analyze();
+
+                // Display outputs
+                outputCode.value = cheraxCode;
+                outputStatus.innerHTML = '<div class="success-message">✅ Conversion successful!</div>';
+
+                // Display AST
+                astOutput.innerHTML = '<div class="tree">' + renderAST(ast) + '</div>';
+
+                // Display tokens
+                let tokenHtml = '<div class="tree"><strong>Tokens:</strong><div class="tree-node">';
+                tokens.slice(0, -1).forEach(token => {
+                    tokenHtml += `<div class="tree-node">${token.type}: ${token.value || ''}</div>`;
+                });
+                tokenHtml += '</div></div>';
+                tokensOutput.innerHTML = tokenHtml;
+
+                // Display analysis
+                let analysisHtml = `<div class="tree">
+                    <div class="tree-node"><strong>Code Analysis</strong></div>
+                    <div class="tree-node">Total Tokens: ${analysis.totalLines}</div>
+                    <div class="tree-node">Variables (${analysis.variables.length}): ${analysis.variables.join(', ') || 'none'}</div>
+                    <div class="tree-node">Functions (${analysis.functions.length}): ${analysis.functions.join(', ') || 'none'}</div>
+                    <div class="tree-node">Stand Calls (${analysis.functionCalls.length}): ${analysis.functionCalls.join(', ') || 'none'}</div>
+                    <div class="tree-node">Cyclomatic Complexity: ${analysis.complexity}</div>
+                </div>`;
+                analysisOutput.innerHTML = analysisHtml;
+
+                // Setup tree toggles
+                setupTreeToggles();
+
+            } catch (error) {
+                outputStatus.innerHTML = `<div class="error-message">❌ ${error.message}</div>`;
+                astOutput.innerHTML = `<div class="tree"><div class="error-message">${error.message}</div></div>`;
+                outputCode.value = '';
+            }
+        }
+
+        function setupTreeToggles() {
+            document.querySelectorAll('.tree-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const parent = this.closest('.tree-node');
+                    const collapsed = parent.querySelector('.tree-collapsed');
+                    if (collapsed) {
+                        collapsed.classList.toggle('tree-collapsed');
+                        this.textContent = collapsed.classList.contains('tree-collapsed') ? '▶' : '▼';
+                    }
+                });
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function copyOutput() {
+            const outputCode = document.getElementById('outputCode');
+            outputCode.select();
+            document.execCommand('copy');
+            
+            const status = document.getElementById('outputStatus');
+            status.innerHTML = '<div class="success-message">✅ Code copied to clipboard!</div>';
+            setTimeout(() => {
+                status.innerHTML = '';
+            }, 2000);
+        }
+
+        function downloadOutput() {
+            const outputCode = document.getElementById('outputCode').value;
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(outputCode));
+            element.setAttribute('download', 'converted.cherax');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            
+            const status = document.getElementById('outputStatus');
+            status.innerHTML = '<div class="success-message">✅ File downloaded!</div>';
+            setTimeout(() => {
+                status.innerHTML = '';
+            }, 2000);
+        }
+
+        function clearInput() {
+            document.getElementById('inputCode').value = '';
+            document.getElementById('outputCode').value = '';
+            document.getElementById('astOutput').innerHTML = '';
+            document.getElementById('tokensOutput').innerHTML = '';
+            document.getElementById('analysisOutput').innerHTML = '';
+        }
+
+        function loadExample(type) {
+            const examples = {
+                basic: `-- Stand library example
+local Stand = require('stand')
+
+function myScript()
+    local result = Stand.getResult()
+    if result then
+        Stand.notify('Result: ' .. result)
+    end
+end
+
+myScript()`,
+                advanced: `-- Advanced Stand example with multiple functions
+local Stand = require('stand')
+local utils = {}
+
+function utils.processData(input)
+    local output = input * 2
+    return output
+end
+
+function main()
+    local data = Stand.getData('key')
+    if data then
+        local processed = utils.processData(data)
+        Stand.setData('result', processed)
+        Stand.notify('Processing complete')
+    else
+        Stand.notify('No data found')
+    end
+end
+
+function cleanup()
+    Stand.release()
+end
+
+main()
+cleanup()`
+            };
+            document.getElementById('inputCode').value = examples[type];
+            document.getElementById('outputCode').value = '';
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            const inputCode = document.getElementById('inputCode');
+            inputCode.value = `-- Stand library example
+local Stand = require('stand')
+
+function myScript()
+    local result = Stand.getResult()
+    if result then
+        Stand.notify('Result: ' .. result)
+    end
+end`;
+        });
+    </script>
+</body>
+</html>
